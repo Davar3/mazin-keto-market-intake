@@ -7,6 +7,16 @@
 <meta name="robots" content="noindex,nofollow">
 <title>مارکێتی نوێ - فۆرمی مەندووب | مازن فۆر کیتۆ</title>
 <style>
+  details.adv{margin-block-start:14px;border:1px solid var(--line,#d8d8d8);border-radius:12px;background:#fafafa}
+  details.adv>summary{padding:14px 16px;min-height:48px;display:flex;align-items:center;gap:8px;
+    cursor:pointer;font-weight:700;font-size:15px;color:#555;list-style:none}
+  details.adv>summary::-webkit-details-marker{display:none}
+  details.adv>summary::before{content:"+";font-size:19px;line-height:1;color:#888}
+  details.adv[open]>summary::before{content:"\2212"}
+  details.adv>.row2{padding:0 16px 14px}
+  #f-mapsUrl.bad input{border-color:#c0392b}
+  #f-mapsUrl.bad .err{display:block}
+
   /* IBM Plex Sans Arabic, subset to Arabic + Sorani + Latin and embedded as
      data URIs. Embedded rather than linked so the page stays one file that
      works from a USB stick, an email attachment or an offline phone - and so
@@ -344,19 +354,37 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     <div class="geo-readout" id="geoOut" role="status" aria-live="polite">شوێن هێشتا دیاری نەکراوە. <span class="ar">لم يُحدد الموقع بعد.</span></div>
 
     <div class="spacer"></div>
-    <p class="hint">ئەگەر GPS کارنەکرد، بە دەستی بینووسە (لە گووگڵ ماپ کۆپی بکە). <span class="ar">إذا تعذّر GPS اكتبها يدوياً.</span></p>
-    <div class="row2">
-      <div class="field" id="f-lat">
-        <label class="lbl" for="lat">Lat <span class="ar">خط العرض</span></label>
-        <input type="text" class="ltr" id="lat" name="lat" inputmode="decimal" autocomplete="off" placeholder="36.190000">
-        <p class="err" id="e-lat">Lat دروست نییە (-90 بۆ 90).</p>
-      </div>
-      <div class="field" id="f-lng">
-        <label class="lbl" for="lng">Lng <span class="ar">خط الطول</span></label>
-        <input type="text" class="ltr" id="lng" name="lng" inputmode="decimal" autocomplete="off" placeholder="44.010000">
-        <p class="err" id="e-lng">Lng دروست نییە (-180 بۆ 180).</p>
-      </div>
+
+    <!-- Paste a Google Maps link. This is the manual path, not the numbers:
+         nobody types 36.190000 correctly on a phone in a shop doorway. -->
+    <div class="field" id="f-mapsUrl">
+      <label class="lbl" for="mapsUrl">یان لینکی گووگڵ ماپ <span class="ar">أو رابط خرائط جوجل</span></label>
+      <input type="text" class="ltr" id="mapsUrl" name="mapsUrl" inputmode="url"
+             autocomplete="off" spellcheck="false" placeholder="https://maps.app.goo.gl/...">
+      <p class="hint">
+        لە گووگڵ ماپ شوێنەکە بدۆزەوە ← <b>Share</b> ← <b>Copy link</b> ← لێرە Paste بکە.<br>
+        <span class="ar">في خرائط جوجل: Share ثم Copy link ثم الصقه هنا.</span>
+      </p>
+      <p class="err" id="e-mapsUrl">ئەمە لینکی گووگڵ ماپ نییە. <span class="ar">هذا ليس رابط خرائط جوجل.</span></p>
     </div>
+
+    <!-- Last resort only, collapsed: kept for the case where GPS is refused and
+         there is no link either, but never the thing we ask for first. -->
+    <details class="adv" id="manualCoords">
+      <summary>ژمارەکان بە دەستی بنووسە <span class="ar">إدخال الإحداثيات يدوياً</span></summary>
+      <div class="row2">
+        <div class="field" id="f-lat">
+          <label class="lbl" for="lat">Lat <span class="ar">خط العرض</span></label>
+          <input type="text" class="ltr" id="lat" name="lat" inputmode="decimal" autocomplete="off" placeholder="36.190000">
+          <p class="err" id="e-lat">Lat دروست نییە (-90 بۆ 90).</p>
+        </div>
+        <div class="field" id="f-lng">
+          <label class="lbl" for="lng">Lng <span class="ar">خط الطول</span></label>
+          <input type="text" class="ltr" id="lng" name="lng" inputmode="decimal" autocomplete="off" placeholder="44.010000">
+          <p class="err" id="e-lng">Lng دروست نییە (-180 بۆ 180).</p>
+        </div>
+      </div>
+    </details>
     <p class="err" id="e-pair" style="display:none">هەردوو Lat و Lng پێویستن (یان هەردووکیان بەتاڵ بن).</p>
   </fieldset>
 
@@ -385,7 +413,7 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
   <div id="clearMsg" class="status" role="status" aria-live="polite"></div>
 </fieldset>
 
-<p class="foot">INTAKE_V: 1 · بێ ئینتەرنێت کاردەکات · يعمل بدون إنترنت</p>
+<p class="foot">INTAKE_V: 2 · بێ ئینتەرنێت کاردەکات · يعمل بدون إنترنت</p>
 
 </div>
 
@@ -466,6 +494,7 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     clearBtn: $("clearBtn"),
     clearMsg: $("clearMsg"),
     geoBtn: $("geoBtn"),
+    mapsUrl: $("mapsUrl"),
     geoOut: $("geoOut"),
     pairErr: $("e-pair")
   };
@@ -598,7 +627,7 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     var mandubName = mandub === "other" ? els.mandubName.value.trim() : (MANDUB_NAMES[mandub] || "");
     var L = [];
     L.push("MAZIN KETO - MARKET INTAKE");
-    L.push("INTAKE_V: 1");
+    L.push("INTAKE_V: 2");
     L.push("SUBMITTED_AT: " + (stamp || baghdadStamp()) + " (Asia/Baghdad)");
     L.push("MANDUB: " + (mandub || DASH));
     L.push(line("MANDUB_NAME", "ناوی مەندووب", mandubName));
@@ -616,10 +645,20 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     L.push("PAYMENT_METHOD: " + paymentValue());
     L.push(line("LAT", "Lat", latinDigits(els.lat.value)));
     L.push(line("LNG", "Lng", latinDigits(els.lng.value)));
-    L.push("LOCATION_SOURCE: " + (els.lat.value.trim() === "" && els.lng.value.trim() === "" ? "none" : geo.source === "gps" ? "gps" : "manual"));
+    L.push(line("MAPS_URL", "لینکی گووگڵ ماپ", String(els.mapsUrl.value || "").trim()));
+    L.push("LOCATION_SOURCE: " + locationSource());
     L.push("GPS_ACCURACY_M: " + (geo.source === "gps" && geo.accuracy != null ? String(Math.round(geo.accuracy)) : DASH));
     L.push("END");
     return L.join("\n");
+  }
+
+  /* Where the position came from, for the owner reading the block. */
+  function locationSource() {
+    var hasCoords = els.lat.value.trim() !== "" || els.lng.value.trim() !== "";
+    if (!hasCoords) return String(els.mapsUrl.value || "").trim() !== "" ? "maps_link_only" : "none";
+    if (geo.source === "gps") return "gps";
+    if (geo.source === "maps_link") return "maps_link";
+    return "manual";
   }
 
   /* ---------- persistence ---------- */
@@ -638,6 +677,7 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
       district: els.district.value,
       subdistrict: els.subdistrict.value,
       paymentMethod: paymentValue(),
+      mapsUrl: els.mapsUrl.value,
       lat: els.lat.value,
       lng: els.lng.value,
       geoSource: geo.source,
@@ -660,7 +700,7 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
       if (r) r.checked = true;
     }
     ["mandubName","name","managerPhone","customerPhone","customerPhone2","address",
-     "openFrom","openTo","subdistrict","lat","lng"].forEach(function (k) {
+     "openFrom","openTo","subdistrict","mapsUrl","lat","lng"].forEach(function (k) {
       if (typeof s[k] === "string") els[k].value = s[k];
     });
     if (s.governorate && AREAS[s.governorate]) {
@@ -673,25 +713,107 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     }
     geo.source = s.geoSource === "gps" ? "gps" : (s.lat || s.lng) ? "manual" : "none";
     geo.accuracy = typeof s.geoAccuracy === "number" ? s.geoAccuracy : null;
-    if (s.lat || s.lng) showCoords();
+    if (s.lat || s.lng || s.mapsUrl) showCoords();
+  }
+
+  /* ---------- google maps links ---------- */
+
+  /* A pasted "location" is rarely a clean URL: the Maps share sheet wraps it in
+     a sentence, and WhatsApp adds its own. Take the first URL out of whatever
+     arrived. */
+  function firstUrl(text) {
+    var m = String(text || "").match(/https?:\/\/[^\s<>"']+/);
+    return m ? m[0].replace(/[.,)\]]+$/, "") : "";
+  }
+
+  function isMapsUrl(u) {
+    return /^https?:\/\/([a-z0-9-]+\.)*(google\.[a-z.]+\/maps|goo\.gl\/maps|maps\.app\.goo\.gl|maps\.google\.[a-z.]+)/i.test(u);
+  }
+
+  /* Pull coordinates out of every Maps URL shape that actually carries them.
+     Short links (maps.app.goo.gl, goo.gl/maps) carry NONE - resolving them
+     needs a network request, and this page makes none by design. Those are
+     kept as a link for the owner to open instead of being rejected. */
+  function coordsFromMapsUrl(u) {
+    var pats = [
+      /@(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/,          /* /@36.19,44.01,17z   */
+      /!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/,          /* place data          */
+      /[?&](?:q|query|ll|sll|daddr|destination)=(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/i,
+      /^geo:(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/i
+    ];
+    for (var i = 0; i < pats.length; i++) {
+      var m = u.match(pats[i]);
+      if (m) {
+        var la = parseFloat(m[1]), ln = parseFloat(m[2]);
+        if (la >= -90 && la <= 90 && ln >= -180 && ln <= 180) return { lat: la, lng: ln };
+      }
+    }
+    return null;
+  }
+
+  /* Bare "36.19, 44.01" pasted straight from somewhere. */
+  function bareCoords(text) {
+    var m = latinDigits(String(text || "")).trim()
+      .match(/^(-?\d{1,3}\.\d+)\s*[,\s]\s*(-?\d{1,3}\.\d+)$/);
+    if (!m) return null;
+    var la = parseFloat(m[1]), ln = parseFloat(m[2]);
+    return (la >= -90 && la <= 90 && ln >= -180 && ln <= 180) ? { lat: la, lng: ln } : null;
+  }
+
+  function applyMapsInput() {
+    var raw = els.mapsUrl.value;
+    var f = document.getElementById("f-mapsUrl");
+    if (String(raw).trim() === "") {
+      f.classList.remove("bad");
+      if (geo.source === "maps_link") { els.lat.value = ""; els.lng.value = ""; geo.source = "manual"; }
+      showCoords(); refresh(); return;
+    }
+
+    var bare = bareCoords(raw);
+    if (bare) {
+      els.lat.value = bare.lat.toFixed(6); els.lng.value = bare.lng.toFixed(6);
+      geo.source = "maps_link"; geo.accuracy = null;
+      f.classList.remove("bad"); showCoords(); refresh(); return;
+    }
+
+    var u = firstUrl(raw);
+    if (!u || !isMapsUrl(u)) { f.classList.add("bad"); refresh(); return; }
+
+    f.classList.remove("bad");
+    els.mapsUrl.value = u;                    /* keep the link, drop the sentence */
+    var c = coordsFromMapsUrl(u);
+    if (c) {
+      els.lat.value = c.lat.toFixed(6); els.lng.value = c.lng.toFixed(6);
+      geo.source = "maps_link"; geo.accuracy = null;
+    } else if (geo.source === "maps_link") {
+      els.lat.value = ""; els.lng.value = "";
+    }
+    showCoords(); refresh();
   }
 
   /* ---------- location ---------- */
   function showCoords(extra) {
     var la = latinDigits(els.lat.value).trim();
     var ln = latinDigits(els.lng.value).trim();
+    var link = String(els.mapsUrl.value || "").trim();
     if (la === "" && ln === "") {
+      /* A short Maps link carries no coordinates, and that is fine - the owner
+         opens the link. Say so rather than leaving it looking unset. */
+      if (link !== "") {
+        els.geoOut.innerHTML = "لینکی شوێن تۆمارکرا - خاوەنەکە دەیکاتەوە. <span class=\"ar\">تم حفظ رابط الموقع.</span>";
+        return;
+      }
       els.geoOut.textContent = "شوێن هێشتا دیاری نەکراوە. / لم يُحدد الموقع بعد.";
       return;
     }
-    var src = geo.source === "gps" ? "GPS" : "بە دەستی";
+    var src = geo.source === "gps" ? "GPS" : geo.source === "maps_link" ? "لینک" : "بە دەستی";
     var acc = (geo.source === "gps" && geo.accuracy != null) ? " · ±" + Math.round(geo.accuracy) + "m" : "";
     els.geoOut.innerHTML = "شوێن تۆمارکرا (" + src + acc + "): <b>" + la + ", " + ln + "</b>" + (extra || "");
   }
 
   els.geoBtn.addEventListener("click", function () {
     if (!navigator.geolocation) {
-      els.geoOut.textContent = "ئەم مۆبایلە GPS پشتگیری ناکات - بە دەستی بینووسە. / الجهاز لا يدعم تحديد الموقع.";
+      els.geoOut.textContent = "ئەم مۆبایلە GPS پشتگیری ناکات - لینکی گووگڵ ماپ Paste بکە. / الجهاز لا يدعم GPS - الصق رابط الخريطة.";
       return;
     }
     els.geoBtn.disabled = true;
@@ -703,17 +825,20 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
         els.lng.value = pos.coords.longitude.toFixed(6);
         geo.source = "gps";
         geo.accuracy = typeof pos.coords.accuracy === "number" ? pos.coords.accuracy : null;
+        /* A real fix beats a pasted link; clear it so the two cannot disagree. */
+        els.mapsUrl.value = "";
+        document.getElementById("f-mapsUrl").classList.remove("bad");
         showCoords();
         markTouched("lat"); markTouched("lng");
         refresh();
       },
       function (err) {
         els.geoBtn.disabled = false;
-        var msg = "شوێن بەردەست نییە - ڕێگەپێدانەکان بپشکنە یان بە دەستی بینووسە.";
-        if (err && err.code === 1) msg = "ڕێگەت نەدا بە شوێن - ڕێگەپێدان بدە یان بە دەستی بینووسە.";
-        else if (err && err.code === 3) msg = "کاتەکە بەسەرچوو - دووبارە هەوڵ بدە یان بە دەستی بینووسە.";
-        els.geoOut.textContent = msg + " / تعذّر تحديد الموقع - اكتبها يدوياً.";
-        els.lat.focus();
+        var msg = "شوێن بەردەست نییە - لینکی گووگڵ ماپ Paste بکە.";
+        if (err && err.code === 1) msg = "ڕێگەت نەدا بە شوێن - لینکی گووگڵ ماپ Paste بکە.";
+        else if (err && err.code === 3) msg = "کاتەکە بەسەرچوو - دووبارە هەوڵ بدە یان لینک Paste بکە.";
+        els.geoOut.textContent = msg + " / تعذّر تحديد الموقع - الصق رابط الخريطة.";
+        els.mapsUrl.focus();
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
@@ -828,6 +953,8 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     els.mandubName.value = "";
     els.mandubName.disabled = true;
     geo.source = "none"; geo.accuracy = null;
+    document.getElementById("f-mapsUrl").classList.remove("bad");
+    document.getElementById("manualCoords").open = false;
     touched = {};
     showCoords();
     els.clearBtn.innerHTML = 'سڕینەوەی فۆرمەکە <span class="ar">مسح الاستمارة</span>';
@@ -845,10 +972,11 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
   }
 
   var TEXT_FIELDS = ["mandubName","name","managerPhone","customerPhone","customerPhone2",
-                     "address","openFrom","openTo","subdistrict","lat","lng"];
+                     "address","openFrom","openTo","subdistrict","mapsUrl","lat","lng"];
   TEXT_FIELDS.forEach(function (k) {
     els[k].addEventListener("input", function () {
       if (k === "lat" || k === "lng") { geo.source = "manual"; geo.accuracy = null; showCoords(); }
+      if (k === "mapsUrl") return;   /* handled by applyMapsInput */
       refresh();
     });
     els[k].addEventListener("blur", function () {
@@ -868,6 +996,10 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
   Array.prototype.forEach.call(document.querySelectorAll('input[name="paymentMethod"]'), function (r) {
     r.addEventListener("change", refresh);
   });
+  els.mapsUrl.addEventListener("input", applyMapsInput);
+  els.mapsUrl.addEventListener("blur", applyMapsInput);
+  els.mapsUrl.addEventListener("paste", function () { setTimeout(applyMapsInput, 0); });
+
   els.governorate.addEventListener("change", function () {
     fillDistricts(els.governorate.value, "");
     markTouched("governorate");
