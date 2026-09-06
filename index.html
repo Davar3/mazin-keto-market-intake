@@ -213,6 +213,19 @@ button{
   cursor:pointer;padding:10px 14px;
 }
 button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);}
+.hourchips{display:flex;flex-wrap:wrap;gap:8px;margin-block-end:14px;}
+.hourchips .chip{
+  inline-size:auto;min-block-size:48px;font-size:16px;font-weight:700;
+  padding:8px 16px;border-radius:9999px;border:2px solid var(--line-strong);
+  background:var(--card);color:var(--ink);direction:ltr;
+}
+.hourchips .chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);}
+#hoursSay{margin-block-start:10px;font-weight:600;}
+a#waBtn{font-family:inherit;font-size:18px;font-weight:700;
+  min-block-size:56px;inline-size:100%;border-radius:var(--radius);padding:10px 14px;
+  box-sizing:border-box;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;
+  background:#1f8f4e;border:1px solid #1f8f4e;color:#fff;}
+a#waBtn[aria-disabled="true"]{background:#c8ccbe;border-color:#c8ccbe;color:#61685a;pointer-events:none;}
 button.primary:disabled{background:#c8ccbe;border-color:#c8ccbe;color:#61685a;cursor:not-allowed;}
 button.ghost{background:var(--card);border-color:var(--brand);color:var(--brand-dark);}
 button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger);}
@@ -464,17 +477,34 @@ nav.navbar .status{margin:0 0 10px;}
     <h2 tabindex="-1"><span class="ku">کات و پارەدان</span><span class="ar">الأوقات والدفع</span></h2>
     <p class="sec-note"><span class="ku">کاتەکان ئارەزوومەندانەن. شێوازی پارەدان پێویستە.</span><span class="ar">الأوقات اختيارية. طريقة الدفع مطلوبة.</span></p>
 
-    <div class="row2">
-      <div class="field" id="f-openFrom">
-        <label class="lbl" for="openFrom"><span class="ku">کاتی کردنەوە</span><span class="ar">يفتح</span> <span class="opt"><span class="ku">(ئارەزوومەندانە)</span><span class="ar">(اختياري)</span></span></label>
-        <input type="time" class="ltr" id="openFrom" name="openFrom" placeholder="10:00">
-        <p class="err" id="e-openFrom"><span class="ku">کات دروست نییە (HH:MM).</span><span class="ar">وقت غير صحيح (HH:MM).</span></p>
+    <!-- Most shops keep one of a handful of timetables, and a mandub standing
+         at the counter should tap it, not spin two clock dials. The presets
+         fill both boxes; the boxes stay for everything else and light up the
+         matching chip when they are edited by hand. -->
+    <div class="hours">
+      <div class="hourchips" id="hourChips" role="group" aria-label="کاتە باوەکان">
+        <button type="button" class="chip" data-from="08:00" data-to="22:00">08:00 - 22:00</button>
+        <button type="button" class="chip" data-from="09:00" data-to="23:00">09:00 - 23:00</button>
+        <button type="button" class="chip" data-from="08:00" data-to="23:59">08:00 - 23:59</button>
+        <button type="button" class="chip" data-from="07:00" data-to="21:00">07:00 - 21:00</button>
+        <button type="button" class="chip" data-from="00:00" data-to="23:59">
+          <span class="ku">٢٤ کاتژمێر</span><span class="ar">٢٤ ساعة</span>
+        </button>
       </div>
-      <div class="field" id="f-openTo">
-        <label class="lbl" for="openTo"><span class="ku">کاتی داخستن</span><span class="ar">يغلق</span> <span class="opt"><span class="ku">(ئارەزوومەندانە)</span><span class="ar">(اختياري)</span></span></label>
-        <input type="time" class="ltr" id="openTo" name="openTo" placeholder="22:00">
-        <p class="err" id="e-openTo"><span class="ku">کات دروست نییە (HH:MM).</span><span class="ar">وقت غير صحيح (HH:MM).</span></p>
+
+      <div class="row2">
+        <div class="field" id="f-openFrom">
+          <label class="lbl" for="openFrom"><span class="ku">دەکرێتەوە</span><span class="ar">يفتح</span></label>
+          <input type="time" class="ltr" id="openFrom" name="openFrom" step="900" placeholder="10:00">
+          <p class="err" id="e-openFrom"><span class="ku">کات دروست نییە (HH:MM).</span><span class="ar">وقت غير صحيح (HH:MM).</span></p>
+        </div>
+        <div class="field" id="f-openTo">
+          <label class="lbl" for="openTo"><span class="ku">دادەخرێت</span><span class="ar">يغلق</span></label>
+          <input type="time" class="ltr" id="openTo" name="openTo" step="900" placeholder="22:00">
+          <p class="err" id="e-openTo"><span class="ku">کات دروست نییە (HH:MM).</span><span class="ar">وقت غير صحيح (HH:MM).</span></p>
+        </div>
       </div>
+      <p class="hint" id="hoursSay"></p>
     </div>
 
     <div class="spacer"></div>
@@ -551,8 +581,14 @@ nav.navbar .status{margin:0 0 10px;}
   <div id="missing" class="status" role="status" aria-live="polite"></div>
 
   <div class="spacer"></div>
+  <!-- Sending beats copying, so it leads. A real link, not a scripted
+       window.open, because a phone browser blocks the second one. -->
+  <a id="waBtn" class="btn primary wa" href="#" target="_blank" rel="noopener" aria-disabled="true">
+    <span class="ku">ناردن بۆ دەڤەر لە واتساپ</span><span class="ar">إرسال إلى دەڤەر عبر واتساب</span>
+  </a>
+  <div class="spacer"></div>
   <div class="copywrap locked" id="copyWrap">
-    <button type="button" id="copyBtn" class="primary" disabled><span class="ku">کۆپیکردن</span><span class="ar">نسخ</span></button>
+    <button type="button" id="copyBtn" disabled><span class="ku">کۆپیکردن</span><span class="ar">نسخ</span></button>
     <div class="tapguard" id="tapGuard" aria-hidden="true"></div>
   </div>
   <div id="copyMsg" class="status" role="status" aria-live="polite"></div>
@@ -639,6 +675,8 @@ nav.navbar .status{margin:0 0 10px;}
   };
   var STORE_KEY = "mzk_market_intake_v1";
   var LANG_KEY = "mzk_intake_lang_v1";
+  /* Where a finished shop goes. Iraqi mobile in international form. */
+  var OFFICE_WA = "9647501095952";
   var TOTAL = 6;
   var $ = function (id) { return document.getElementById(id); };
 
@@ -689,7 +727,30 @@ nav.navbar .status{margin:0 0 10px;}
     rLocation:     { ckb: "شوێن", ar: "الموقع" },
     pmCod:         { ckb: "نەقد لە کاتی گەیاندن", ar: "نقداً عند التسليم" },
     pmCredit:      { ckb: "وەصڵ بە وەصڵ", ar: "وصل بوصل" },
-    pmConsignment: { ckb: "بەپێی فرۆش", ar: "أمانة (حسب البيع)" }
+    pmConsignment: { ckb: "بەپێی فرۆش", ar: "أمانة (حسب البيع)" },
+    blockTitle:    { ckb: "مارکێتێکی نوێ · مازن بۆ کیتۆ", ar: "سوق جديد · مازن للكيتو" },
+    fName:         { ckb: "ناوی مارکێت", ar: "اسم السوق" },
+    fManagerPhone: { ckb: "ژمارەی بەڕێوەبەر", ar: "هاتف المدير" },
+    fCustomerPhone:{ ckb: "ژمارەی کڕیاران", ar: "هاتف للزبائن" },
+    fCustomerPhone2:{ ckb: "ژمارەی دووەمی کڕیاران", ar: "رقم ثانٍ للزبائن" },
+    fAddress:      { ckb: "ناونیشان", ar: "العنوان" },
+    fArea:         { ckb: "ناوچە", ar: "المنطقة" },
+    fHours:        { ckb: "کاتی کارکردن", ar: "أوقات العمل" },
+    fPayment:      { ckb: "شێوازی پارەدان", ar: "طريقة الدفع" },
+    fLocation:     { ckb: "شوێن", ar: "الموقع" },
+    fLocationHow:  { ckb: "چۆن وەرگیرا", ar: "مصدر الموقع" },
+    fMandub:       { ckb: "مەندووب", ar: "المندوب" },
+    fSent:         { ckb: "ناردن", ar: "الإرسال" },
+    baghdadTime:   { ckb: "(بەغدا)", ar: "(بغداد)" },
+    locGps:        { ckb: "GPS لە شوێنی مارکێت", ar: "GPS من موقع السوق" },
+    locWithin:     { ckb: "(وردی {m} م)", ar: "(دقة {m} م)" },
+    locFromLink:   { ckb: "لینکی گووگڵ ماپ", ar: "رابط خرائط جوجل" },
+    locTyped:      { ckb: "بە دەست نووسراوە", ar: "أُدخل يدوياً" },
+    locNone:       { ckb: "دانەنراوە", ar: "لم يُحدَّد" },
+    sentWa:        { ckb: "واتساپ کرایەوە - دوگمەی ناردن لێبدە.", ar: "فُتح واتساب - اضغط زر الإرسال." },
+    hoursFromTo:   { ckb: "لە {a} تا {b} کراوەیە.", ar: "مفتوح من {a} حتى {b}." },
+    hours24:       { ckb: "٢٤ کاتژمێر کراوەیە.", ar: "مفتوح ٢٤ ساعة." },
+    hoursHalf:     { ckb: "هەردوو کاتەکە پڕ بکەرەوە.", ar: "أكمل الوقتين." }
   };
   var lang = document.documentElement.getAttribute("data-lang") === "ar" ? "ar" : "ckb";
   function lab(pair) { return pair ? (pair[lang] || pair.ckb || "") : ""; }
@@ -736,6 +797,9 @@ nav.navbar .status{margin:0 0 10px;}
     clearBtn: $("clearBtn"),
     clearMsg: $("clearMsg"),
     newBtn: $("newBtn"),
+    waBtn: $("waBtn"),
+    hourChips: $("hourChips"),
+    hoursSay: $("hoursSay"),
     newWrap: $("newWrap"),
     geoBtn: $("geoBtn"),
     mapsUrl: $("mapsUrl"),
@@ -880,33 +944,68 @@ nav.navbar .status{margin:0 0 10px;}
     return key + " (" + label + "): " + v;
   }
 
+  /*
+   * The block a mandub pastes into WhatsApp.
+   *
+   * Written to be READ. It used to be a machine dump - ALL_CAPS keys, a
+   * version number, LOCATION_SOURCE, a row of dashes - which nobody could
+   * check at a glance before sending, and the office read the same way.
+   * Now it is a shop record in the language the form is in: labelled lines,
+   * empty optional answers left out rather than printed as "-", the payment
+   * method in words, and the position as a Google Maps link that opens with
+   * one tap, so a wrong pin is caught in the shop instead of a week later.
+   */
   function buildBlock(stamp) {
     var mandub = mandubValue();
     var mandubName = mandub === "other" ? els.mandubName.value.trim() : (MANDUB_NAMES[mandub] || "");
     var L = [];
-    L.push("MAZIN KETO - MARKET INTAKE");
-    L.push("INTAKE_V: 2");
-    L.push("SUBMITTED_AT: " + (stamp || baghdadStamp()) + " (Asia/Baghdad)");
-    L.push("MANDUB: " + (mandub || DASH));
-    L.push(line("MANDUB_NAME", "ناوی مەندووب", mandubName));
-    L.push("---");
-    L.push(line("MARKET_NAME", "ناوی مارکێت", els.name.value));
-    L.push(line("MANAGER_PHONE", "ژمارەی بەڕێوەبەر", normPhone(els.managerPhone.value)));
-    L.push(line("CUSTOMER_PHONE", "ژمارەی کڕیاران", normPhone(els.customerPhone.value)));
-    L.push(line("CUSTOMER_PHONE_2", "ژمارەی دووەمی کڕیاران", normPhone(els.customerPhone2.value)));
-    L.push(line("ADDRESS", "ناونیشان", els.address.value));
-    L.push(line("GOVERNORATE", "پارێزگا", els.governorate.value));
-    L.push(line("DISTRICT", "قەزا", els.district.value));
-    L.push(line("SUBDISTRICT", "ناحیە", els.subdistrict.value));
-    L.push(line("OPEN_FROM", "کاتی کردنەوە", latinDigits(els.openFrom.value)));
-    L.push(line("OPEN_TO", "کاتی داخستن", latinDigits(els.openTo.value)));
-    L.push("PAYMENT_METHOD: " + paymentValue());
-    L.push(line("LAT", "Lat", latinDigits(els.lat.value)));
-    L.push(line("LNG", "Lng", latinDigits(els.lng.value)));
-    L.push(line("MAPS_URL", "لینکی گووگڵ ماپ", String(els.mapsUrl.value || "").trim()));
-    L.push("LOCATION_SOURCE: " + locationSource());
-    L.push("GPS_ACCURACY_M: " + (geo.source === "gps" && geo.accuracy != null ? String(Math.round(geo.accuracy)) : DASH));
-    L.push("END");
+    var add = function (label, value) {
+      var v = (value == null ? "" : String(value)).trim();
+      if (v !== "") L.push(label + ": " + v);
+    };
+
+    L.push(t("blockTitle"));
+    L.push("");
+    add(t("fName"), els.name.value);
+    add(t("fManagerPhone"), normPhone(els.managerPhone.value));
+    add(t("fCustomerPhone"), normPhone(els.customerPhone.value));
+    add(t("fCustomerPhone2"), normPhone(els.customerPhone2.value));
+    L.push("");
+    add(t("fAddress"), els.address.value);
+
+    var area = [els.governorate.value, els.district.value, els.subdistrict.value]
+      .map(function (x) { return String(x || "").trim(); })
+      .filter(Boolean).join(" / ");
+    add(t("fArea"), area);
+
+    var from = latinDigits(els.openFrom.value).trim();
+    var to = latinDigits(els.openTo.value).trim();
+    add(t("fHours"), from && to ? from + " - " + to : (from || to));
+
+    var pay = { cod: "pmCod", credit: "pmCredit", consignment: "pmConsignment" }[paymentValue()];
+    add(t("fPayment"), t(pay || "pmCod"));
+
+    L.push("");
+    var lat = latinDigits(els.lat.value).trim();
+    var lng = latinDigits(els.lng.value).trim();
+    var pasted = String(els.mapsUrl.value || "").trim();
+    var src = locationSource();
+    if (lat && lng) {
+      add(t("fLocation"), "https://www.google.com/maps?q=" + lat + "," + lng);
+      var how = src === "gps"
+        ? t("locGps") + (geo.accuracy != null ? " " + t("locWithin").replace("{m}", String(Math.round(geo.accuracy))) : "")
+        : src === "maps_link" ? t("locFromLink") : t("locTyped");
+      L.push(t("fLocationHow") + ": " + how);
+    } else if (pasted) {
+      add(t("fLocation"), pasted);
+      L.push(t("fLocationHow") + ": " + t("locFromLink"));
+    } else {
+      L.push(t("fLocation") + ": " + t("locNone"));
+    }
+
+    L.push("");
+    add(t("fMandub"), mandubName || mandub);
+    add(t("fSent"), (stamp || baghdadStamp()) + " " + t("baghdadTime"));
     return L.join("\n");
   }
 
@@ -1125,6 +1224,8 @@ nav.navbar .status{margin:0 0 10px;}
     Object.keys(c).forEach(function (k) {
       paintField(k, c[k].ok || !touched[k]);
     });
+    armWa();
+    hoursSummary();
     var miss = missingList(c);
     if (miss.length === 0) {
       els.missing.className = "status good";
@@ -1399,24 +1500,82 @@ nav.navbar .status{margin:0 0 10px;}
   }
   function reMsg(el) { if (el._k) el.textContent = t(el._k); }
 
+  /* One shop is finished: show the way to the next, and stamp the draft so a
+     reload does not hand these answers to it. */
+  function markSent() {
+    els.newWrap.hidden = false;
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        var d = JSON.parse(raw);
+        d.copiedAt = Date.now();
+        localStorage.setItem(STORE_KEY, JSON.stringify(d));
+      }
+    } catch (e) { /* private mode */ }
+  }
+
   function copyDone(ok) {
     if (ok) {
       setMsg(els.copyMsg, "good", "copied");
       // The draft has served its purpose. Mark it, so a reload starts the next
       // shop clean instead of handing back answers that are already filed.
-      els.newWrap.hidden = false;
-      try {
-        var raw = localStorage.getItem(STORE_KEY);
-        if (raw) {
-          var s = JSON.parse(raw);
-          s.copiedAt = Date.now();
-          localStorage.setItem(STORE_KEY, JSON.stringify(s));
-        }
-      } catch (e) { /* private mode */ }
+      markSent();
     } else {
       setMsg(els.copyMsg, "warn", "copyFail");
     }
   }
+
+  /* The href is rebuilt on the tap itself, so the timestamp inside the message
+     is the moment it was sent rather than whenever the screen last redrew. */
+  function waHref() {
+    return "https://wa.me/" + OFFICE_WA + "?text=" + encodeURIComponent(buildBlock(baghdadStamp()));
+  }
+  function armWa() {
+    var ready = allValid(checks());
+    els.waBtn.setAttribute("aria-disabled", ready ? "false" : "true");
+    els.waBtn.href = ready ? waHref() : "#";
+  }
+  els.waBtn.addEventListener("pointerdown", armWa);
+  els.waBtn.addEventListener("click", function (e) {
+    if (!allValid(checks())) { e.preventDefault(); return; }
+    els.waBtn.href = waHref();
+    els.out.value = buildBlock(baghdadStamp());
+    // Sent is sent: end the draft so a reload starts the next shop clean.
+    markSent();
+    els.copyMsg.className = "status good";
+    els.copyMsg.textContent = t("sentWa");
+  });
+
+  /* ---------- opening hours ---------- */
+
+  /* The chips and the two boxes are one control: tapping a chip fills the
+     boxes, editing a box lights the chip that matches, and the line
+     underneath says the result back in words so nobody has to decode
+     "23:59" as "just before midnight". */
+  function hoursSummary() {
+    var f = latinDigits(els.openFrom.value).trim();
+    var to = latinDigits(els.openTo.value).trim();
+    [].forEach.call(els.hourChips.querySelectorAll(".chip"), function (c) {
+      var on = c.getAttribute("data-from") === f && c.getAttribute("data-to") === to;
+      c.classList.toggle("on", on);
+    });
+    var say = "";
+    if (f && to) {
+      say = (f === "00:00" && to === "23:59") ? t("hours24")
+        : t("hoursFromTo").replace("{a}", f).replace("{b}", to);
+    } else if (f || to) {
+      say = t("hoursHalf");
+    }
+    els.hoursSay.textContent = say;
+  }
+  els.hourChips.addEventListener("click", function (e) {
+    var c = e.target.closest(".chip");
+    if (!c) return;
+    els.openFrom.value = c.getAttribute("data-from");
+    els.openTo.value = c.getAttribute("data-to");
+    markTouched("openFrom"); markTouched("openTo");
+    refresh();
+  });
 
   els.copyBtn.addEventListener("click", function () {
     var text = buildBlock(baghdadStamp());

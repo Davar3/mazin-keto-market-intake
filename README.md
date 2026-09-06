@@ -60,29 +60,22 @@ Stable ASCII keys, one field per line, human label in parentheses. `-` means the
 left it empty. A missing optional value is still emitted, so the shape never changes.
 
 ```
-MAZIN KETO - MARKET INTAKE
-INTAKE_V: 2
-SUBMITTED_AT: 2026-08-23 18:14 (Asia/Baghdad)
-MANDUB: drmazin
-MANDUB_NAME (ناوی مەندووب): د. مازن
----
-MARKET_NAME (ناوی مارکێت): مارکێتی ڕۆژهەڵات
-MANAGER_PHONE (ژمارەی بەڕێوەبەر): 07501234567
-CUSTOMER_PHONE (ژمارەی کڕیاران): 07701234567
-CUSTOMER_PHONE_2 (ژمارەی دووەمی کڕیاران): -
-ADDRESS (ناونیشان): مەخموور، شەقامی 60 مەتری، بەرامبەر مزگەوتی گەورە
-GOVERNORATE (پارێزگا): هەولێر
-DISTRICT (قەزا): مەخموور
-SUBDISTRICT (ناحیە): قەرەچۆغ
-OPEN_FROM (کاتی کردنەوە): 09:30
-OPEN_TO (کاتی داخستن): 23:00
-PAYMENT_METHOD: credit
-LAT (Lat): 36.190000
-LNG (Lng): 44.010000
-MAPS_URL (لینکی گووگڵ ماپ): -
-LOCATION_SOURCE: gps
-GPS_ACCURACY_M: 12
-END
+مارکێتێکی نوێ · مازن بۆ کیتۆ
+
+ناوی مارکێت: ماركيت الجامعة
+ژمارەی بەڕێوەبەر: 07823836883
+ژمارەی کڕیاران: 07823836883
+
+ناونیشان: شرقاط - قريب من اسواق خانوكة
+ناوچە: سەڵاحەدین / شەرقات
+کاتی کارکردن: 08:00 - 22:00
+شێوازی پارەدان: نەقد لە کاتی گەیاندن
+
+شوێن: https://www.google.com/maps?q=33.850132,44.516098
+چۆن وەرگیرا: GPS لە شوێنی مارکێت (وردی 29 م)
+
+مەندووب: د. مازن
+ناردن: 2026-09-07 01:14 (بەغدا)
 ```
 
 Parse it with one regex per line:
