@@ -105,9 +105,11 @@ Three ways in, in the order the form offers them:
    coordinates out of any link that carries them (`/@lat,lng`, `?q=`, `!3d!4d`,
    `?query=`), and accepts a bare `36.19, 44.01` too. It also strips the
    sentence the share sheet wraps around the URL.
-3. **Typed numbers** - collapsed behind a disclosure, because nobody types
-   `36.190000` correctly on a phone in a shop doorway. It exists only for the
-   case where GPS is refused *and* there is no link.
+3. **Typed numbers** - there is no hand-entry path any more. `LAT`/`LNG` are
+   hidden inputs that only GPS or a parsed link ever writes, because nobody
+   types `36.190000` correctly on a phone in a shop doorway and a wrong pin is
+   worse than no pin. `LOCATION_SOURCE: manual` therefore only ever comes back
+   from a draft restored off an older version of the page.
 
 **Short links carry no coordinates.** `maps.app.goo.gl/...` - what the Android
 share sheet produces - is an opaque redirect; resolving it needs a network
@@ -120,6 +122,32 @@ A GPS fix clears any pasted link, so the two can never disagree.
 
 `INTAKE_V` is the schema version of the block. **Bump it if you change or remove a key**,
 so an old page still sitting on a mandub's phone can be told apart from a new one.
+
+## How it is laid out
+
+A six-screen wizard, one question group per screen, preceded by a one-time
+language screen - **کوردی** or **العربية**. The choice is remembered on that
+phone and switched any time from the toggle in the header; from then on the
+whole interface is in that one language, not both at once.
+
+1. کێ پڕی دەکاتەوە / من يملأ الاستمارة - who is filling it in
+2. ناوی مارکێت و ژمارەکان / اسم السوق والأرقام
+3. شوێن / المنطقة والعنوان - governorate, district, sub-district, address
+4. کات و پارەدان / الأوقات والدفع
+5. لینکی شوێن / رابط الموقع - GPS button or a pasted Google Maps link
+6. پێداچوونەوە / المراجعة - every answer listed back, each row tappable to jump
+   to the screen it came from, then Copy and "مارکێتی نوێ / سوق جديد"
+
+Each screen owns one history entry (`#s1` … `#s6`), so the Android back gesture
+and the browser back button step backwards through the form instead of leaving
+it, and a reload - or a link to `…/index.html#s4` - lands on that screen with
+the draft still in the boxes. **دواتر / التالي** is refused with a sentence
+naming the missing field until that screen's required fields are valid; a
+screen holding only optional fields still has one.
+
+The block the form produces did not change: same fields, same order, same
+`INTAKE_V: 2`. A parser on the other side reads it, and it is verified against
+the previous version's output byte for byte.
 
 ## Behaviour worth knowing
 
