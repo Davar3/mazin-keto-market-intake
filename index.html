@@ -7,13 +7,6 @@
 <meta name="robots" content="noindex,nofollow">
 <title>مارکێتی نوێ - فۆرمی مەندووب | مازن فۆر کیتۆ</title>
 <style>
-  details.adv{margin-block-start:14px;border:1px solid var(--line,#d8d8d8);border-radius:12px;background:#fafafa}
-  details.adv>summary{padding:14px 16px;min-height:48px;display:flex;align-items:center;gap:8px;
-    cursor:pointer;font-weight:700;font-size:15px;color:#555;list-style:none}
-  details.adv>summary::-webkit-details-marker{display:none}
-  details.adv>summary::before{content:"+";font-size:19px;line-height:1;color:#888}
-  details.adv[open]>summary::before{content:"\2212"}
-  details.adv>.row2{padding:0 16px 14px}
   #f-mapsUrl.bad input{border-color:#c0392b}
   #f-mapsUrl.bad .err{display:block}
 
@@ -368,24 +361,12 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
       <p class="err" id="e-mapsUrl">ئەمە لینکی گووگڵ ماپ نییە. <span class="ar">هذا ليس رابط خرائط جوجل.</span></p>
     </div>
 
-    <!-- Last resort only, collapsed: kept for the case where GPS is refused and
-         there is no link either, but never the thing we ask for first. -->
-    <details class="adv" id="manualCoords">
-      <summary>ژمارەکان بە دەستی بنووسە <span class="ar">إدخال الإحداثيات يدوياً</span></summary>
-      <div class="row2">
-        <div class="field" id="f-lat">
-          <label class="lbl" for="lat">Lat <span class="ar">خط العرض</span></label>
-          <input type="text" class="ltr" id="lat" name="lat" inputmode="decimal" autocomplete="off" placeholder="36.190000">
-          <p class="err" id="e-lat">Lat دروست نییە (-90 بۆ 90).</p>
-        </div>
-        <div class="field" id="f-lng">
-          <label class="lbl" for="lng">Lng <span class="ar">خط الطول</span></label>
-          <input type="text" class="ltr" id="lng" name="lng" inputmode="decimal" autocomplete="off" placeholder="44.010000">
-          <p class="err" id="e-lng">Lng دروست نییە (-180 بۆ 180).</p>
-        </div>
-      </div>
-    </details>
-    <p class="err" id="e-pair" style="display:none">هەردوو Lat و Lng پێویستن (یان هەردووکیان بەتاڵ بن).</p>
+    <!-- Coordinates are machine-set only: GPS, or parsed out of a pasted Maps
+         link. There is no hand-entry path - a mandub standing in a shop doorway
+         is never going to type 36.190000 correctly, and a wrong pin is worse
+         than no pin. -->
+    <input type="hidden" id="lat" name="lat">
+    <input type="hidden" id="lng" name="lng">
   </fieldset>
 
 </form>
@@ -402,6 +383,13 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     <div class="tapguard" id="tapGuard" aria-hidden="true"></div>
   </div>
   <div id="copyMsg" class="status" role="status" aria-live="polite"></div>
+
+  <!-- Appears only once a block has been copied: the text is safely on the
+       clipboard, so starting the next shop is one tap and needs no confirm. -->
+  <div id="newWrap" hidden>
+    <div class="spacer"></div>
+    <button type="button" id="newBtn" class="primary">مارکێتی نوێ <span class="ar">سوق جديد</span></button>
+  </div>
 
   <div class="spacer"></div>
   <label class="lbl" for="out">دەقی ناردن <span class="ar">النص المرسل</span></label>
@@ -493,10 +481,11 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     copyMsg: $("copyMsg"),
     clearBtn: $("clearBtn"),
     clearMsg: $("clearMsg"),
+    newBtn: $("newBtn"),
+    newWrap: $("newWrap"),
     geoBtn: $("geoBtn"),
     mapsUrl: $("mapsUrl"),
-    geoOut: $("geoOut"),
-    pairErr: $("e-pair")
+    geoOut: $("geoOut")
   };
   var geo = { source: "none", accuracy: null };
 
@@ -557,11 +546,9 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
       customerPhone2: { ok: els.customerPhone2.value.trim() === "" || isPhone(els.customerPhone2.value), required: false },
       openFrom: { ok: els.openFrom.value.trim() === "" || isTime(els.openFrom.value), required: false },
       openTo: { ok: els.openTo.value.trim() === "" || isTime(els.openTo.value), required: false },
-      lat: { ok: els.lat.value.trim() === "" || (num(els.lat.value) !== null && num(els.lat.value) >= -90 && num(els.lat.value) <= 90), required: false },
-      lng: { ok: els.lng.value.trim() === "" || (num(els.lng.value) !== null && num(els.lng.value) >= -180 && num(els.lng.value) <= 180), required: false }
+      lat: { ok: true, required: false },
+      lng: { ok: true, required: false }
     };
-    var oneCoord = (els.lat.value.trim() === "") !== (els.lng.value.trim() === "");
-    c._pair = { ok: !oneCoord };
     return c;
   }
 
@@ -591,11 +578,9 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     });
     // Optional fields that were filled in wrongly also block the copy.
     [["customerPhone", "ژمارەی کڕیاران"], ["customerPhone2", "ژمارەی دووەمی کڕیاران"],
-     ["openFrom", "کاتی کردنەوە"], ["openTo", "کاتی داخستن"],
-     ["lat", "Lat"], ["lng", "Lng"]].forEach(function (p) {
+     ["openFrom", "کاتی کردنەوە"], ["openTo", "کاتی داخستن"]].forEach(function (p) {
       if (c[p[0]] && !c[p[0]].ok) out.push({ key: p[0], label: p[1] });
     });
-    if (!c._pair.ok) out.push({ key: "lat", label: "Lat و Lng - هەردووکیان" });
     return out;
   }
 
@@ -681,12 +666,20 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
       lat: els.lat.value,
       lng: els.lng.value,
       geoSource: geo.source,
-      geoAccuracy: geo.accuracy
+      geoAccuracy: geo.accuracy,
+      savedAt: Date.now()
     };
   }
   function save() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(snapshot())); } catch (e) { /* private mode */ }
   }
+  /* A draft is worth keeping while a shop is being written up. It stops being
+     worth keeping once it has been copied and sent, or once it is a day old -
+     past either line, restoring it does not save anyone work, it just hands
+     the next shop the previous one's answers. Only the mandub's own name
+     survives, because that is the same person all day. */
+  var DRAFT_MAX_AGE_MS = 20 * 60 * 60 * 1000;
+
   function restore() {
     var raw;
     try { raw = localStorage.getItem(STORE_KEY); } catch (e) { return; }
@@ -694,6 +687,11 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     var s;
     try { s = JSON.parse(raw); } catch (e) { return; }
     if (!s || typeof s !== "object") return;
+
+    var stale = typeof s.savedAt === "number" && Date.now() - s.savedAt > DRAFT_MAX_AGE_MS;
+    if (s.copiedAt || stale) {
+      s = { mandub: s.mandub, mandubName: s.mandubName };
+    }
 
     if (s.mandub) {
       var r = document.querySelector('input[name="mandub"][value="' + s.mandub + '"]');
@@ -765,7 +763,7 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     var f = document.getElementById("f-mapsUrl");
     if (String(raw).trim() === "") {
       f.classList.remove("bad");
-      if (geo.source === "maps_link") { els.lat.value = ""; els.lng.value = ""; geo.source = "manual"; }
+      if (geo.source === "maps_link") { els.lat.value = ""; els.lng.value = ""; geo.source = "none"; }
       showCoords(); refresh(); return;
     }
 
@@ -849,11 +847,8 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     var c = checks();
 
     Object.keys(c).forEach(function (k) {
-      if (k === "_pair") return;
       paintField(k, c[k].ok || !touched[k]);
     });
-    els.pairErr.style.display = c._pair.ok ? "none" : "block";
-
     var miss = missingList(c);
     if (miss.length === 0) {
       els.missing.className = "status good";
@@ -870,7 +865,7 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
       els.missing.appendChild(ul);
     }
 
-    var ready = allValid(c) && c._pair.ok;
+    var ready = allValid(c);
     els.copyBtn.disabled = !ready;
     els.copyWrap.classList.toggle("locked", !ready);
     els.out.value = buildBlock();
@@ -911,6 +906,17 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     if (ok) {
       els.copyMsg.className = "status good";
       els.copyMsg.textContent = "✔ کۆپی کرا - ئێستا لە واتساپ/تێلێگرام Paste بکە. / تم النسخ - الصقه الآن.";
+      // The draft has served its purpose. Mark it, so a reload starts the next
+      // shop clean instead of handing back answers that are already filed.
+      els.newWrap.hidden = false;
+      try {
+        var raw = localStorage.getItem(STORE_KEY);
+        if (raw) {
+          var s = JSON.parse(raw);
+          s.copiedAt = Date.now();
+          localStorage.setItem(STORE_KEY, JSON.stringify(s));
+        }
+      } catch (e) { /* private mode */ }
     } else {
       els.copyMsg.className = "status warn";
       els.copyMsg.textContent = "کۆپی سەرنەکەوت - دەستت لەسەر دەقەکەی خوارەوە ڕابگرە و بە دەستی کۆپی بکە. / انسخ النص يدوياً.";
@@ -927,6 +933,54 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
       copyDone(legacyCopy(text));
     }
     save();
+  });
+
+  /* ---------- clearing the form ---------- */
+
+  /*
+   * Empty every box and forget the saved draft, keeping only WHO is filling
+   * the form in - that is the same person all day, and retyping it for every
+   * shop is the one thing nobody thanks you for.
+   */
+  function clearForm(keepMandub) {
+    var mandub = keepMandub ? mandubValue() : "";
+    var mandubName = keepMandub ? els.mandubName.value : "";
+    try { localStorage.removeItem(STORE_KEY); } catch (e) { /* private mode */ }
+    document.getElementById("frm").reset();
+    fillDistricts("", "");
+    if (mandub) {
+      var r = document.querySelector('input[name="mandub"][value="' + mandub + '"]');
+      if (r) r.checked = true;
+      els.mandubName.value = mandubName;
+    } else {
+      els.mandubName.value = "";
+    }
+    syncConditionals();
+    geo.source = "none"; geo.accuracy = null;
+    document.getElementById("f-mapsUrl").classList.remove("bad");
+    touched = {};
+    els.out.value = "";
+    showCoords();
+    refresh();
+    if (mandub) save();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  /*
+   * Start the next shop.
+   *
+   * Appears the moment a block is copied, and clears in ONE tap - the danger
+   * the two-tap confirm below protects against (losing work) is already past,
+   * because the text is on the clipboard. This exists because without it the
+   * form kept the last shop's answers: reload, and the boxes were still full,
+   * so the next intake inherited whatever had not been overtyped. A market in
+   * Shirqat was filed with a Diyala shop's GPS reading that way.
+   */
+  els.newBtn.addEventListener("click", function () {
+    clearForm(true);
+    els.copyMsg.className = "status good";
+    els.copyMsg.textContent = "فۆرمەکە ئامادەیە بۆ مارکێتی داهاتوو. / الاستمارة جاهزة للسوق التالي.";
+    els.newWrap.hidden = true;
   });
 
   /* ---------- clear (two-tap confirm) ---------- */
@@ -947,22 +1001,13 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     }
     clearTimeout(clearTimer);
     clearArmed = false;
-    try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
-    document.getElementById("frm").reset();
-    fillDistricts("", "");
-    els.mandubName.value = "";
-    els.mandubName.disabled = true;
-    geo.source = "none"; geo.accuracy = null;
-    document.getElementById("f-mapsUrl").classList.remove("bad");
-    document.getElementById("manualCoords").open = false;
-    touched = {};
-    showCoords();
+    clearForm(false);
     els.clearBtn.innerHTML = 'سڕینەوەی فۆرمەکە <span class="ar">مسح الاستمارة</span>';
     els.clearMsg.className = "status good";
     els.clearMsg.textContent = "فۆرمەکە سڕایەوە. / تم مسح الاستمارة.";
     els.copyMsg.className = "status";
     els.copyMsg.textContent = "";
-    refresh();
+    els.newWrap.hidden = true;
   });
 
   /* ---------- wiring ---------- */
@@ -972,10 +1017,9 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
   }
 
   var TEXT_FIELDS = ["mandubName","name","managerPhone","customerPhone","customerPhone2",
-                     "address","openFrom","openTo","subdistrict","mapsUrl","lat","lng"];
+                     "address","openFrom","openTo","subdistrict","mapsUrl"];
   TEXT_FIELDS.forEach(function (k) {
     els[k].addEventListener("input", function () {
-      if (k === "lat" || k === "lng") { geo.source = "manual"; geo.accuracy = null; showCoords(); }
       if (k === "mapsUrl") return;   /* handled by applyMapsInput */
       refresh();
     });
