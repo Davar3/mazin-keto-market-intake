@@ -211,6 +211,18 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
         <input type="radio" name="mandub" id="mandub-hiwa" value="hiwa">
         <span class="txt"><span class="t1">هیوا</span><span class="t2">دەرەوەی کوردستان · هيوا</span></span>
       </label>
+      <label class="choice" for="mandub-latif">
+        <input type="radio" name="mandub" id="mandub-latif" value="latif">
+        <span class="txt"><span class="t1">لەتیف</span><span class="t2">دەرەوەی کوردستان · لطيف</span></span>
+      </label>
+      <label class="choice" for="mandub-davar">
+        <input type="radio" name="mandub" id="mandub-davar" value="davar">
+        <span class="txt"><span class="t1">داوەر</span><span class="t2">تۆمارکردنی زانیاری · داور</span></span>
+      </label>
+      <label class="choice" for="mandub-abdullah">
+        <input type="radio" name="mandub" id="mandub-abdullah" value="abdullah">
+        <span class="txt"><span class="t1">عەبدوڵا</span><span class="t2">تۆمارکردنی زانیاری · عبدالله</span></span>
+      </label>
       <label class="choice" for="mandub-drmazin">
         <input type="radio" name="mandub" id="mandub-drmazin" value="drmazin">
         <span class="txt"><span class="t1">د. مازن</span><span class="t2">Dr. Mazin · د. مازن</span></span>
@@ -432,7 +444,13 @@ button.danger{background:var(--bg);color:var(--danger);border-color:var(--danger
     "سەڵاحەدین": ["تکریت","بەیجی","سامەڕا","دوجەیل","بەلەد","شەرقات","دوزخورماتوو","زەلوعیە"]
   };
 
-  var MANDUB_NAMES = { nzar: "نزار", hiwa: "هیوا", drmazin: "د. مازن" };
+  /* Who may be filling this in. The first three are the mandubs who own
+     territory; the last three enter shops from the office, and which mandub a
+     shop then belongs to is decided in the system, not here. */
+  var MANDUB_NAMES = {
+    nzar: "نزار", hiwa: "هیوا", latif: "لەتیف",
+    davar: "داوەر", abdullah: "عەبدوڵا", drmazin: "د. مازن"
+  };
   var STORE_KEY = "mzk_market_intake_v1";
   var $ = function (id) { return document.getElementById(id); };
 
