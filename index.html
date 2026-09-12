@@ -631,9 +631,11 @@ nav.navbar .status{margin:0 0 10px;}
   "use strict";
 
   /* ---------- area tree (real names from the app's governorates/districts) ----------
-     These are DATA, not interface text: they are written into the block and the
-     owner matches them to UUIDs by exact spelling. They stay in Kurdish in both
-     interface languages - translating them would break the match. */
+     The Kurdish names are the stored VALUES - a saved draft keeps working no
+     matter which language it was typed in. What the mandub SEES, and what is
+     written into the block, follows the interface language: the system holds an
+     Arabic name for every governorate and district (AREA_AR below, copied from
+     it verbatim), so an Arabic block matches by exact spelling just as well. */
   var AREAS = {
     "هەولێر": ["هەولێر","دەشتی هەولێر","خەبات","مەخموور","کۆیە","شەقڵاوە","سۆران","ڕواندز","چۆمان","مێرگەسۆر"],
     "سلێمانی": ["سلێمانی","چەمچەماڵ","دووکان","ڕانیە","پشدەر","پێنجوێن","شارباژێڕ","قەرەداغ","دەربەندیخان","کەلار","کفری","ماوەت"],
@@ -656,10 +658,38 @@ nav.navbar .status{margin:0 0 10px;}
     "سەڵاحەدین": ["تکریت","بەیجی","سامەڕا","دوجەیل","بەلەد","شەرقات","دوزخورماتوو","زەلوعیە"]
   };
 
+
+  /* Arabic names, verbatim from the system's governorates.name_ar / districts.name_ar. */
+  var AREA_AR = {
+    "هەولێر":   { ar: "أربيل",      d: { "هەولێر":"أربيل","دەشتی هەولێر":"سهل أربيل","خەبات":"الخبات","مەخموور":"مخمور","کۆیە":"كوية","شەقڵاوە":"شقلاوة","سۆران":"سوران","ڕواندز":"راوندوز","چۆمان":"جومان","مێرگەسۆر":"ميركسور" } },
+    "سلێمانی":  { ar: "السليمانية", d: { "سلێمانی":"السليمانية","چەمچەماڵ":"جمجمال","دووکان":"دوكان","ڕانیە":"رانية","پشدەر":"بشدر","پێنجوێن":"بنجوين","شارباژێڕ":"شاربازير","قەرەداغ":"قرة داغ","دەربەندیخان":"دربندخان","کەلار":"كلار","کفری":"كفري","ماوەت":"ماوت" } },
+    "دهۆک":     { ar: "دهوك",       d: { "دهۆک":"دهوك","زاخۆ":"زاخو","سێمێل":"سميل","ئاکرێ":"عقرة","ئامێدی":"العمادية","شێخان":"الشيخان","بەردەڕەش":"بردرش" } },
+    "هەڵەبجە":  { ar: "حلبجة",      d: { "هەڵەبجە":"حلبجة","شارەزوور":"شهرزور","سەید سادق":"سيد صادق","بیارە":"بيارة" } },
+    "کەرکووک":  { ar: "كركوك",      d: { "کەرکووک":"كركوك","دبس":"دبس","داقوق":"داقوق","حەویجە":"الحويجة" } },
+    "نەینەوا":  { ar: "نينوى",      d: { "مووسڵ":"الموصل","تەلعەفەر":"تلعفر","تەلکێف":"تلكيف","شنگال":"سنجار","حەمدانیە":"الحمدانية","حەزەر":"الحضر","بەعاج":"البعاج" } },
+    "بەغدا":    { ar: "بغداد",      d: { "ڕەسافە":"الرصافة","کەرخ":"الكرخ","ئەعزەمیە":"الأعظمية","کازمیە":"الكاظمية","مەنسور":"المنصور","مەدینەی سەدر":"مدينة الصدر","٩ی نیسان":"9 نيسان","ڕەشید":"الرشيد","ئەبو غرێب":"أبو غريب","تارمیە":"الطارمية","مەدائن":"المدائن","مەحمودیە":"المحمودية" } },
+    "بەسرە":    { ar: "البصرة",     d: { "بەسرە":"البصرة","زوبێر":"الزبير","ئەبولخەسیب":"أبو الخصيب","شەتولعەرەب":"شط العرب","قورنە":"القرنة","مدەینە":"المدينة","فاو":"الفاو" } },
+    "دیالە":    { ar: "ديالى",      d: { "بەعقوبە":"بعقوبة","خانەقین":"خانقين","مقدادیە":"المقدادية","خالس":"الخالص","بەلەدرۆز":"بلدروز" } },
+    "ئەنبار":   { ar: "الأنبار",    d: { "ڕەمادی":"الرمادي","فەللوجە":"الفلوجة","هیت":"هيت","حەدیسە":"حديثة","عەنە":"عانة","ڕاوە":"راوة","قائم":"القائم","ڕوتبە":"الرطبة" } },
+    "بابل":     { ar: "بابل",       d: { "حیللە":"الحلة","مەحاویل":"المحاويل","هاشمیە":"الهاشمية","مسەیەب":"المسيب" } },
+    "کەربەلا":  { ar: "كربلاء",     d: { "کەربەلا":"كربلاء","هندیە":"الهندية","عەین تەمر":"عين التمر" } },
+    "نەجەف":    { ar: "النجف",      d: { "نەجەف":"النجف","کوفە":"الكوفة","مەنازرە":"المناذرة" } },
+    "قادسیە":   { ar: "القادسية",   d: { "دیوانیە":"الديوانية","شامیە":"الشامية","عەفەک":"عفك","حەمزە":"الحمزة" } },
+    "موسەننا":  { ar: "المثنى",     d: { "سەماوە":"السماوة","ڕومەیسە":"الرميثة","خزر":"الخضر","سەلمان":"السلمان" } },
+    "زیقار":    { ar: "ذي قار",     d: { "ناسریە":"الناصرية","شەترە":"الشطرة","ڕفاعی":"الرفاعي","سوقەلشیوخ":"سوق الشيوخ","جبایش":"الجبايش" } },
+    "مەیسان":   { ar: "ميسان",      d: { "عەمارە":"العمارة","مەجەر کەبیر":"المجر الكبير","قەڵات ساڵح":"قلعة صالح","کەحلا":"الكحلاء","عەلی غەربی":"علي الغربي","مەیمونە":"الميمونة" } },
+    "واست":     { ar: "واسط",       d: { "کووت":"الكوت","حەی":"الحي","نوعمانیە":"النعمانية","عەزیزیە":"العزيزية","سوەیرە":"الصويرة","بەدرە":"بدرة" } },
+    "سەڵاحەدین":{ ar: "صلاح الدين", d: { "تکریت":"تكريت","بەیجی":"بيجي","سامەڕا":"سامراء","دوجەیل":"الدجيل","بەلەد":"بلد","شەرقات":"الشرقاط","دوزخورماتوو":"طوزخورماتو","زەلوعیە":"الضلوعية" } }
+  };
+  /* What a stored area value is called in the current interface language. */
+  function govLabel(g)     { return (lang === "ar" && AREA_AR[g]) ? AREA_AR[g].ar : g; }
+  function distLabel(g, d) { return (lang === "ar" && AREA_AR[g] && AREA_AR[g].d[d]) ? AREA_AR[g].d[d] : d; }
+
   /* Who may be filling this in. The first three are the mandubs who own
      territory; the last three enter shops from the office, and which mandub a
      shop then belongs to is decided in the system, not here.
-     This map feeds MANDUB_NAME in the block - do not translate it. */
+     The block writes MANDUB_LABEL in the block's own language; this map is
+     the fallback and the stable key. */
   var MANDUB_NAMES = {
     nzar: "نزار", hiwa: "هیوا", latif: "لەتیف",
     davar: "دەڤەر", abdullah: "عەبدوڵا", drmazin: "د. مازن"
@@ -831,7 +861,7 @@ nav.navbar .status{margin:0 0 10px;}
     var frag = document.createDocumentFragment();
     Object.keys(AREAS).forEach(function (g) {
       var o = document.createElement("option");
-      o.value = g; o.textContent = g;
+      o.value = g; o.textContent = govLabel(g);
       frag.appendChild(o);
     });
     els.governorate.appendChild(frag);
@@ -846,7 +876,7 @@ nav.navbar .status{margin:0 0 10px;}
     var list = (gov && AREAS[gov]) || [];
     list.forEach(function (d) {
       var o = document.createElement("option");
-      o.value = d; o.textContent = d;
+      o.value = d; o.textContent = distLabel(gov, d);
       els.district.appendChild(o);
     });
     els.district.disabled = list.length === 0;
@@ -957,7 +987,9 @@ nav.navbar .status{margin:0 0 10px;}
    */
   function buildBlock(stamp) {
     var mandub = mandubValue();
-    var mandubName = mandub === "other" ? els.mandubName.value.trim() : (MANDUB_NAMES[mandub] || "");
+    var mandubName = mandub === "other"
+      ? els.mandubName.value.trim()
+      : ((MANDUB_LABEL[mandub] && MANDUB_LABEL[mandub][lang]) || MANDUB_NAMES[mandub] || "");
     var L = [];
     var add = function (label, value) {
       var v = (value == null ? "" : String(value)).trim();
@@ -973,7 +1005,9 @@ nav.navbar .status{margin:0 0 10px;}
     L.push("");
     add(t("fAddress"), els.address.value);
 
-    var area = [els.governorate.value, els.district.value, els.subdistrict.value]
+    var gov = String(els.governorate.value || "").trim();
+    var dist = String(els.district.value || "").trim();
+    var area = [gov && govLabel(gov), dist && distLabel(gov, dist), els.subdistrict.value]
       .map(function (x) { return String(x || "").trim(); })
       .filter(Boolean).join(" / ");
     add(t("fArea"), area);
@@ -1731,6 +1765,8 @@ nav.navbar .status{margin:0 0 10px;}
     els.mandubName.placeholder = t("phName");
     els.address.placeholder = t("phAddress");
     els.out.setAttribute("aria-label", t("outLabel"));
+    Array.prototype.forEach.call(els.governorate.options, function (o) { if (o.value) o.textContent = govLabel(o.value); });
+    Array.prototype.forEach.call(els.district.options, function (o) { if (o.value) o.textContent = distLabel(els.governorate.value, o.value); });
     if (els.governorate.options.length) els.governorate.options[0].textContent = t("choose");
     if (els.district.options.length) {
       els.district.options[0].textContent = els.governorate.value ? t("choose") : t("chooseGovFirst");
